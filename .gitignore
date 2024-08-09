@@ -1,0 +1,13 @@
+# Ignore all Python files except ELEMENTEGG.py
+*.py
+!ELEMENTEGG.py
+
+# Ignore all JSON files
+*.json
+
+# Ignore the myenv folder
+myenv/
+
+# Do not ignore these directories
+!ASSETS/
+!SOUNDS/
