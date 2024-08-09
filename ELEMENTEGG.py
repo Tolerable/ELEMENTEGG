@@ -65,7 +65,7 @@ def switch_theme():
     save_music_preference(music_on, current_theme)
 
 def toggle_music():
-    global music_on, current_theme
+    global music_on
     music_on = not music_on
     if music_on:
         pygame.mixer.music.unpause()
@@ -74,6 +74,7 @@ def toggle_music():
     save_music_preference(music_on, current_theme)
 
 def start_theme_song():
+    global music_on
     pygame.mixer.music.load(current_theme)
     pygame.mixer.music.play(-1)  # -1 means loop indefinitely
     if not music_on:
@@ -1288,8 +1289,9 @@ def load_game(game_name):
     growth_level = game_data["growth_level"]
     tokens = game_data.get("tokens", 0)
     lifetime_fed = game_data.get("lifetime_fed", {element['symbol']: 0 for element in elements})
-    music_on = game_data.get("music_on", music_on)  # Use the current music_on state if not in save
-    current_theme = game_data.get("current_theme", current_theme)  # Use the current theme if not in save
+    music_on = game_data.get("music_on", music_on)
+    current_theme = game_data.get("current_theme", current_theme)
+    start_theme_song()
     current_game_name = game_name
     
     # Update music state based on loaded preferences
