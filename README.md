@@ -17,9 +17,10 @@ The game is still in progress, with new features and enhancements being actively
 ## How to Play
 
 1. **Pick Elements:** Choose initial elements that will define the attributes of your egg.
-2. **Spin for Ore:** Use tokens to spin for ore, redeeming it for additional elements.
-3. **Feed the Egg:** Feed your egg with the elements you've collected to help it grow.
-4. **Hatch and Play:** Once hatched, guide your creature through levels, consuming resources and advancing deeper.
+2. **Combine Elements:** Discover Element combinations to win TOKENS for SLOTS spins!
+3. **Spin for Ore:** Use tokens to spin for ore, redeeming it for additional element feed for your egg.
+4. **Feed the Egg:** Feed your egg with the elements you've collected to help it grow and level up.
+5. **Hatch and Play:** Once hatched, your creature can advance through the depths, consuming resources and advancing deeper.
 
 Stay tuned for more updates as the game evolves!
 
