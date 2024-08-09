@@ -22,6 +22,12 @@ The game is still in progress, with new features and enhancements being actively
 4. **Feed the Egg:** Feed your egg with the elements you've collected to help it grow and level up.
 5. **Hatch and Play:** Once hatched, your creature can advance through the depths, consuming resources and advancing deeper.
 
+## Useful Keys
+
+1. **MUSIC OFF:** M Toggles Music ON / OFF
+2. **THEME SWITCH:** T Cycles Through Theme Music on Title Page
+3. **MOUSE SUPPORT:** LEFT Click, Right Click, Roll Wheel
+
 Stay tuned for more updates as the game evolves!
 
 ## License
