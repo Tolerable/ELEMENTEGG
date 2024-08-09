@@ -1,5 +1,7 @@
 # ELEMENTEGG
 
+![Element_Egg_Tease](https://github.com/user-attachments/assets/d8f77e32-a34d-4706-9309-41a90410ec09)
+
 ## Overview
 
 ELEMENTEGG is a game where you raise an egg by selecting and combining elements from the periodic table. The gameplay involves several key phases:
