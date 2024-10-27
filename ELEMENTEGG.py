@@ -11,6 +11,8 @@ import datetime
 import math
 import colorsys
 import pygame.mixer
+import noise
+import threading
 
 # Initialize Pygame
 pygame.init()
@@ -19,12 +21,23 @@ pygame.freetype.init()
 
 # Screen dimensions
 width, height = 900, 800
+WIDTH, HEIGHT = width, height  # Add this line
 screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 
 # Define colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
+DIRT_BROWN = (139, 69, 19)
+GRASS_GREEN = (34, 139, 34)
+WATER_BLUE = (65, 105, 225)
+ROCK_GRAY = (128, 128, 128)
+NUTRIENT_COLOR = (255, 215, 0)  # Gold
+WATER_COLOR = (0, 191, 255)  # Deep Sky Blue
+MINERAL_COLOR = (192, 192, 192)  # Silver
+BLACK_HOLE_COLOR = (75, 0, 130)  # Indigo
+HEALTH_BAR_COLOR = (50, 205, 50)  # Lime Green for health
+ENERGY_BAR_COLOR = (30, 144, 255)  # Dodger Blue for energy
 
 debug_mode = False
 debug_font = pygame.font.Font(None, 24)
@@ -45,40 +58,60 @@ def save_sound_preference(sound_on):
         json.dump({'sound_on': sound_on}, f)
 
 def load_music_preference():
-    if os.path.exists(MUSIC_FILE):
+    try:
         with open(MUSIC_FILE, 'r') as f:
             prefs = json.load(f)
-            return prefs['music_on'], prefs.get('current_theme', THEME_SONG_1)
-    return True, THEME_SONG_1  # Default to music on and first theme if file doesn't exist
+            music_on = prefs.get('music_on', True)
+            current_theme = prefs.get('current_theme', THEME_SONG_1)
+    except (FileNotFoundError, json.JSONDecodeError):
+        music_on = True
+        current_theme = THEME_SONG_1
+    
+    return music_on, current_theme
 
-def save_music_preference(music_on, current_theme):
-    with open(MUSIC_FILE, 'w') as f:
-        json.dump({'music_on': music_on, 'current_theme': current_theme}, f)
+def start_theme_song():
+    if music_on:
+        pygame.mixer.music.load(current_theme)
+        pygame.mixer.music.play(-1)
+    else:
+        pygame.mixer.music.stop()
 
 def switch_theme():
-    global current_theme, music_on
+    global current_theme
     if current_theme == THEME_SONG_1:
         current_theme = THEME_SONG_2
     else:
         current_theme = THEME_SONG_1
-    start_theme_song()
     save_music_preference(music_on, current_theme)
+    start_theme_song()
 
 def toggle_music():
     global music_on
     music_on = not music_on
     if music_on:
+        pygame.mixer.music.play(-1)
+    else:
+        pygame.mixer.music.stop()
+    save_music_preference(music_on, current_theme)
+
+def save_music_preference(music_on, current_theme):
+    with open(MUSIC_FILE, 'w') as f:
+        json.dump({'music_on': music_on, 'current_theme': current_theme}, f)
+
+def validate_theme():
+    global current_theme
+    if current_theme not in [THEME_SONG_1, THEME_SONG_2]:
+        current_theme = THEME_SONG_1  # Default to THEME_SONG_1 if invalid
+
+def apply_music_state():
+    if music_on:
         pygame.mixer.music.unpause()
     else:
         pygame.mixer.music.pause()
-    save_music_preference(music_on, current_theme)
 
-def start_theme_song():
-    global music_on
-    pygame.mixer.music.load(current_theme)
-    pygame.mixer.music.play(-1)  # -1 means loop indefinitely
-    if not music_on:
-        pygame.mixer.music.pause()
+# Now we can safely load music preferences and start the theme song
+music_on, current_theme = load_music_preference()
+start_theme_song()
 
 def ensure_valid_color(color):
     """Ensure the color is a valid tuple of 3 integers between 0 and 255."""
@@ -186,6 +219,32 @@ class EggCreature:
 # Initialize the egg creature
 egg_creature = EggCreature(width, height)
 
+class HatchedCreature:
+    def __init__(self, traits, width, height):
+        self.width = width
+        self.height = height
+        self.color = traits.get("color", [(255, 255, 255)])  # Default to white if no color is provided
+        self.size = traits.get("size", 5)  # Default size
+        self.body_parts = traits.get("body_parts", [])  # List of body parts like wings, tail, etc.
+    
+    def draw(self, screen):
+        # Draw the body of the creature
+        for i, color in enumerate(self.color):
+            pygame.draw.circle(screen, color, (self.width // 2, self.height // 2), self.size * (i + 1))
+        
+        # Draw the body parts
+        for body_part in self.body_parts:
+            if body_part == "wings":
+                pygame.draw.polygon(screen, (255, 255, 255), [
+                    (self.width // 2 - 20, self.height // 2 - 20), 
+                    (self.width // 2 + 20, self.height // 2 - 20), 
+                    (self.width // 2, self.height // 2 - 40)
+                ])
+            elif body_part == "tail":
+                pygame.draw.line(screen, (255, 255, 255), 
+                    (self.width // 2, self.height // 2 + 20), 
+                    (self.width // 2, self.height // 2 + 60), 5)
+
 # Load assets
 def load_image(file, fallback_color=(255, 255, 255)):
     try:
@@ -253,6 +312,10 @@ game_to_delete = None
 last_autosave_time = time.time()
 creature_traits = None
 
+TILE_SIZE = 8
+GRID_SIZE = 20
+EMPTY, NUTRIENT, WATER, MINERAL, BLACK_HOLE = range(5)
+
 # Initial element selection
 max_elements = 3
 elements_picked = 0
@@ -275,12 +338,15 @@ font_path = "C:/Windows/Fonts/seguiemj.ttf"
 slot_font = pygame.font.Font(font_path, 48)
 
 buttons = [
-    {"label": "PICK", "rect": pygame.Rect(750, height // 2 - 120, 100, 50), "color": (0, 255, 0)},
-    {"label": "LAB", "rect": pygame.Rect(750, height // 2 - 60, 100, 50), "color": (0, 0, 255)},
-    {"label": "FEED", "rect": pygame.Rect(750, height // 2, 100, 50), "color": (255, 0, 0)},
-    {"label": "SLOTS", "rect": pygame.Rect(750, height // 2 + 60, 100, 50), "color": (255, 255, 0)}
+    {"label": "LAB", "rect": pygame.Rect(750, height // 2 - 120, 100, 50), "color": (0, 0, 255)},
+    {"label": "SLOTS", "rect": pygame.Rect(750, height // 2 - 60, 100, 50), "color": (255, 255, 0)},
+    {"label": "PICK", "rect": pygame.Rect(750, height // 2, 100, 50), "color": (0, 255, 0)},
+    {"label": "FEED", "rect": pygame.Rect(750, height // 2 + 60, 100, 50), "color": (255, 0, 0)},
+    {"label": "EAT", "rect": pygame.Rect(750, height // 2 + 120, 100, 50), "color": (255, 165, 0)},
 ]
 
+# The EAT button will be added dynamically when needed
+eat_button = {"label": "EAT", "rect": pygame.Rect(width // 2 - 50, height - 100, 100, 50), "color": (255, 165, 0)}
 start_button = {"label": "Start Game", "rect": pygame.Rect(width // 2 - 75, height // 2, 150, 50), "color": (0, 255, 0)}
 confirm_button = pygame.Rect(width - 200, height - 100, 150, 50)
 spin_button = pygame.Rect(325, 675, 150, 60)
@@ -288,6 +354,428 @@ back_button = pygame.Rect(50, 675, 150, 60)
 
 music_on, current_theme = load_music_preference()
 start_theme_song()
+
+class Landscape:
+    def __init__(self, width, height, level=0):
+        self.width = width
+        self.height = height
+        self.surface = pygame.Surface((self.width, self.height))
+        self.resource_grid = [[EMPTY for _ in range(self.width // GRID_SIZE)] for _ in range(self.height // GRID_SIZE)]
+        self.level = level
+        self.black_hole_pos = None
+        self.generate()
+        self.node_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        self.generate_nodes()
+
+    def draw(self, surface):
+        surface.blit(self.surface, (0, 0))
+
+
+    def generate_nodes(self):
+        self.node_surface.fill((0, 0, 0, 0))  # Clear the node surface
+        for y in range(self.height // GRID_SIZE):
+            for x in range(self.width // GRID_SIZE):
+                if random.random() < 0.3:  # Adjust this probability for node density
+                    resource = random.choice([NUTRIENT, WATER, MINERAL])
+                    self.resource_grid[y][x] = resource
+                    color = NUTRIENT_COLOR if resource == NUTRIENT else WATER_COLOR if resource == WATER else MINERAL_COLOR
+                    pygame.draw.circle(self.node_surface, color, 
+                                       (x * GRID_SIZE + GRID_SIZE // 2, y * GRID_SIZE + GRID_SIZE // 2), 
+                                       GRID_SIZE // 3)
+                    pygame.draw.circle(self.node_surface, (255, 255, 255), 
+                                       (x * GRID_SIZE + GRID_SIZE // 2, y * GRID_SIZE + GRID_SIZE // 2), 
+                                       GRID_SIZE // 3, 1)
+                                       
+    def generate(self):
+        color_schemes = [
+            [(34, 139, 34), (65, 105, 225), (128, 128, 128)],  # Surface: Green, Blue, Gray
+            [(101, 67, 33), (70, 130, 180), (169, 169, 169)],  # Underground: Brown, Steel Blue, Dark Gray
+            [(165, 42, 42), (0, 191, 255), (105, 105, 105)],   # Deep: Brown, Deep Sky Blue, Dim Gray
+            [(255, 69, 0), (30, 144, 255), (192, 192, 192)],   # Magma: Orange Red, Dodger Blue, Silver
+            [(255, 0, 0), (0, 0, 139), (220, 220, 220)]        # Core: Red, Dark Blue, Gainsboro
+        ]
+        
+        colors = color_schemes[min(self.level, len(color_schemes) - 1)]
+        
+        for y in range(0, HEIGHT, TILE_SIZE):
+            for x in range(0, WIDTH, TILE_SIZE):
+                nx, ny = x / WIDTH, y / HEIGHT
+                value = noise.pnoise2(4 * nx, 4 * ny, octaves=6, persistence=0.5, lacunarity=2.0, repeatx=1024, repeaty=1024, base=self.level)
+                
+                if value < -0.1:
+                    color = colors[1]  # Water-like
+                elif value < 0.2:
+                    color = colors[0]  # Main terrain
+                elif value < 0.3:
+                    color = colors[2]  # Rock-like
+                else:
+                    color = colors[0]  # Main terrain
+                
+                pygame.draw.rect(self.surface, color, (x, y, TILE_SIZE, TILE_SIZE))
+
+        # Generate resources and black hole
+        for y in range(self.height // GRID_SIZE):
+            for x in range(self.width // GRID_SIZE):
+                if random.random() < 0.3:
+                    self.resource_grid[y][x] = random.choice([NUTRIENT, WATER, MINERAL])
+
+        # Place black hole (not in the center 25% of the map)
+        while True:
+            x = random.randint(0, self.width // GRID_SIZE - 1)
+            y = random.randint(0, self.height // GRID_SIZE - 1)
+            if x < self.width // (4 * GRID_SIZE) or x >= 3 * self.width // (4 * GRID_SIZE) or \
+               y < self.height // (4 * GRID_SIZE) or y >= 3 * self.height // (4 * GRID_SIZE):
+                self.resource_grid[y][x] = BLACK_HOLE
+                self.black_hole_pos = (x, y)
+                break
+
+    def draw(self, surface):
+        surface.blit(self.surface, (0, 0))
+
+    def draw_nodes(self, surface):
+        surface.blit(self.node_surface, (0, 0))
+
+    def consume_resource(self, x, y):
+        grid_x, grid_y = x // GRID_SIZE, y // GRID_SIZE
+        if 0 <= grid_x < self.width // GRID_SIZE and 0 <= grid_y < self.height // GRID_SIZE:
+            resource = self.resource_grid[grid_y][grid_x]
+            self.resource_grid[grid_y][grid_x] = EMPTY
+            if resource != BLACK_HOLE:
+                pygame.draw.rect(self.surface, DIRT_BROWN, (grid_x * GRID_SIZE, grid_y * GRID_SIZE, GRID_SIZE, GRID_SIZE))
+                pygame.draw.circle(self.node_surface, (0, 0, 0, 0), 
+                                   (grid_x * GRID_SIZE + GRID_SIZE // 2, grid_y * GRID_SIZE + GRID_SIZE // 2), 
+                                   GRID_SIZE // 3)
+            return resource
+        return EMPTY
+
+    def reveal_nodes(self):
+        for y in range(self.height // GRID_SIZE):
+            for x in range(self.width // GRID_SIZE):
+                if self.resource_grid[y][x] != EMPTY:
+                    color = NUTRIENT_COLOR if self.resource_grid[y][x] == NUTRIENT else WATER_COLOR if self.resource_grid[y][x] == WATER else MINERAL_COLOR if self.resource_grid[y][x] == MINERAL else BLACK_HOLE_COLOR
+                    pygame.draw.circle(self.node_surface, color, 
+                                       (x * GRID_SIZE + GRID_SIZE // 2, y * GRID_SIZE + GRID_SIZE // 2), 
+                                       GRID_SIZE // 3)
+                    pygame.draw.circle(self.node_surface, (255, 255, 255), 
+                                       (x * GRID_SIZE + GRID_SIZE // 2, y * GRID_SIZE + GRID_SIZE // 2), 
+                                       GRID_SIZE // 3, 1)
+class EatCreature:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.size = 5  # Start small
+        self.max_size = 15
+        self.growth_rate = 0.01  # Slow growth rate
+        self.base_speed = 0.7
+        self.health = 100
+        self.energy = 100
+        self.direction = [random.uniform(-1, 1), random.uniform(-1, 1)]
+        self.target = None
+        self.black_hole_found = False
+        self.last_meal_time = pygame.time.get_ticks()
+        self.swallowed = False
+        self.swallow_progress = 0
+        self.wander_count = 0
+        self.last_consumed_color = WHITE
+        self.skill_timers = {'reveal': 0, 'big_bite': 0}
+
+    def consume(self, resource, landscape):
+        self.last_meal_time = pygame.time.get_ticks()
+        if resource == NUTRIENT:
+            self.health = min(100, self.health + 5)
+            self.last_consumed_color = NUTRIENT_COLOR
+        elif resource == WATER:
+            self.energy = min(100, self.energy + 10)
+            self.last_consumed_color = WATER_COLOR
+        elif resource == MINERAL:
+            self.size = min(self.max_size, self.size + self.growth_rate)
+            self.last_consumed_color = MINERAL_COLOR
+        elif resource == BLACK_HOLE:
+            self.black_hole_found = True
+            self.last_consumed_color = BLACK_HOLE_COLOR
+            self.teleport_to_next_level(landscape)
+
+    def draw(self, surface):
+        if self.swallowed:
+            self.swallow_progress += 2
+            radius = int(self.size + self.swallow_progress)
+            if radius > 2 * self.size:
+                self.size -= 1
+                if self.size <= 0:
+                    return False
+            pygame.draw.circle(surface, BLACK, (int(self.x), int(self.y)), radius)
+        else:
+            pygame.draw.circle(surface, self.last_consumed_color, (int(self.x), int(self.y)), int(self.size) + 2)
+            pygame.draw.circle(surface, WHITE, (int(self.x), int(self.y)), int(self.size))
+        return True
+    def get_speed(self):
+        if self.energy <= 10:
+            return self.base_speed * 0.25
+        elif self.energy <= 25:
+            return self.base_speed * 0.5
+        elif self.energy <= 75:
+            return self.base_speed
+        else:
+            return self.base_speed * 1.25
+
+    def move(self, landscape):
+        if self.swallowed:
+            return False
+
+        if self.black_hole_found:
+            self.swallowed = True
+            return True
+
+        if self.target is None or random.random() < 0.05:
+            self.find_new_target(landscape)
+
+        if self.target:
+            dx = self.target[0] - self.x
+            dy = self.target[1] - self.y
+            distance = (dx**2 + dy**2)**0.5
+            speed = self.get_speed()
+            if distance > speed:
+                self.x += (dx / distance) * speed
+                self.y += (dy / distance) * speed
+            else:
+                self.x, self.y = self.target
+                self.target = None
+
+        self.x = max(0, min(landscape.width - 1, self.x))
+        self.y = max(0, min(landscape.height - 1, self.y))
+        self.energy = max(0, self.energy - 0.05)  # Slower energy drain
+        self.health = max(0, self.health - 0.005)  # Slower health drain
+
+        # Manage active skills
+        self.manage_skills(landscape)
+
+        return True
+
+    def find_new_target(self, landscape):
+        if self.black_hole_found:
+            return
+
+        # Check for nearby resources in a small radius first
+        search_radius = 2
+        nearby_resources = []
+        for dy in range(-search_radius, search_radius + 1):
+            for dx in range(-search_radius, search_radius + 1):
+                grid_x = int(self.x // GRID_SIZE + dx)
+                grid_y = int(self.y // GRID_SIZE + dy)
+                if 0 <= grid_x < landscape.width // GRID_SIZE and 0 <= grid_y < landscape.height // GRID_SIZE:
+                    if landscape.resource_grid[grid_y][grid_x] != EMPTY:
+                        distance = math.hypot(grid_x * GRID_SIZE + GRID_SIZE // 2 - self.x,
+                                              grid_y * GRID_SIZE + GRID_SIZE // 2 - self.y)
+                        nearby_resources.append((distance, (grid_x * GRID_SIZE + GRID_SIZE // 2,
+                                                            grid_y * GRID_SIZE + GRID_SIZE // 2)))
+
+        if nearby_resources:
+            nearby_resources.sort(key=lambda r: r[0])
+            self.target = nearby_resources[0][1]
+            self.wander_count = 0  # Reset wander count after finding a target
+            print(f"New target found at ({self.target[0]}, {self.target[1]})")
+        else:
+            # Limit random wandering and force a search after a few failed attempts
+            if self.wander_count < 5:
+                angle = random.uniform(0, 2 * math.pi)
+                distance = random.uniform(20, 60)
+                self.target = ((self.x + math.cos(angle) * distance) % landscape.width,
+                               (self.y + math.sin(angle) * distance) % landscape.height)
+                self.wander_count += 1
+                print(f"Random wandering to ({self.target[0]}, {self.target[1]})")
+            else:
+                print("Forcing a teleport after too much wandering")
+                self.teleport(landscape)
+                self.wander_count = 0  # Reset wander count after teleporting
+
+    def update(self):
+        if not self.creature.move(self.landscape):
+            return False
+
+        resource = self.landscape.consume_resource(int(self.creature.x), int(self.creature.y))
+        if resource != EMPTY:
+            self.creature.consume(resource, self.landscape)
+            if resource == BLACK_HOLE:
+                self.depth += 1
+                self.score += 100 * self.depth
+                self.landscape = Landscape(self.landscape.width, self.landscape.height, self.depth)
+                self.creature.x, self.creature.y = self.landscape.width // 2, self.landscape.height // 2
+            else:
+                self.score += 1
+
+        if time.time() - self.reveal_timer > self.reveal_duration:
+            self.reveal_timer = 0
+
+        return True
+
+    def reveal_nodes(self):
+        self.reveal_timer = time.time()
+
+    def teleport(self, landscape):
+        new_x = random.randint(0, landscape.width)
+        new_y = random.randint(0, landscape.height)
+        print(f"Random teleport to ({new_x}, {new_y})")
+        self.x = new_x
+        self.y = new_y
+        self.target = None
+
+    def teleport_to_next_level(self, landscape):
+        print("Teleporting to the next level...")
+        self.x = landscape.width // 2
+        self.y = landscape.height // 2
+        self.black_hole_found = False
+        self.swallowed = False
+        self.swallow_progress = 0
+
+    def manage_skills(self, landscape):
+        current_time = pygame.time.get_ticks()
+        
+        if current_time - self.skill_timers['reveal'] > 15000:  # Reveal every 15 seconds
+            self.reveal_area(landscape)
+            self.skill_timers['reveal'] = current_time
+        
+        if current_time - self.skill_timers['big_bite'] > 20000:  # Big bite every 20 seconds
+            self.big_bite(landscape)
+            self.skill_timers['big_bite'] = current_time
+
+    def reveal_area(self, landscape):
+        reveal_radius = 100  # Radius of reveal area
+        grid_radius = reveal_radius // GRID_SIZE
+        cx, cy = int(self.x // GRID_SIZE), int(self.y // GRID_SIZE)
+
+        # Clear previous reveal effect
+        landscape.generate()
+
+        for dy in range(-grid_radius, grid_radius + 1):
+            for dx in range(-grid_radius, grid_radius + 1):
+                grid_x = cx + dx
+                grid_y = cy + dy
+                if 0 <= grid_x < WIDTH // GRID_SIZE and 0 <= grid_y < HEIGHT // GRID_SIZE:
+                    if landscape.resource_grid[grid_y][grid_x] != EMPTY:
+                        pygame.draw.circle(landscape.surface, landscape.resource_grid[grid_y][grid_x], (grid_x * GRID_SIZE + GRID_SIZE // 2, grid_y * GRID_SIZE + GRID_SIZE // 2), GRID_SIZE // 2)
+
+    def big_bite(self, landscape):
+        bite_radius = 3 * self.size
+        grid_radius = int(bite_radius // GRID_SIZE)  # Convert to integer
+        cx, cy = int(self.x // GRID_SIZE), int(self.y // GRID_SIZE)
+
+        for dy in range(-grid_radius, grid_radius + 1):
+            for dx in range(-grid_radius, grid_radius + 1):
+                grid_x = cx + dx
+                grid_y = cy + dy
+                if 0 <= grid_x < landscape.width // GRID_SIZE and 0 <= grid_y < landscape.height // GRID_SIZE:
+                    resource = landscape.resource_grid[grid_y][grid_x]
+                    if resource != EMPTY and resource != BLACK_HOLE:
+                        landscape.consume_resource(grid_x * GRID_SIZE, grid_y * GRID_SIZE)
+                        self.consume(resource, landscape)  # Pass landscape here
+                    if resource == BLACK_HOLE:
+                        self.black_hole_found = True
+                        self.teleport_to_next_level(landscape)  # Pass landscape here
+
+class EatCreatureGame:
+    def __init__(self, creature_stats):
+        self.landscape = Landscape(WIDTH, HEIGHT)
+        self.creature = EatCreature(creature_stats['x'], creature_stats['y'])
+        self.score = 0
+        self.depth = 0
+        self.running_in_background = False
+        self.initialize_creature(creature_stats)
+        self.reveal_timer = 0
+        self.reveal_duration = 3
+        self.reveal_cooldown = 15
+
+    def initialize_creature(self, stats):
+        self.creature.size = stats['size']
+        self.creature.health = stats['health']
+        self.creature.energy = stats['energy']
+
+    def update(self):
+        current_time = time.time()
+
+        if not self.creature.move(self.landscape):
+            return False
+
+        resource = self.landscape.consume_resource(int(self.creature.x), int(self.creature.y))
+        if resource != EMPTY:
+            self.creature.consume(resource, self.landscape)
+            if resource == BLACK_HOLE:
+                self.depth += 1
+                self.score += 100 * self.depth
+                self.landscape = Landscape(self.landscape.width, self.landscape.height, self.depth)
+                self.creature.x, self.creature.y = self.landscape.width // 2, self.landscape.height // 2
+            else:
+                self.score += 1
+
+        # Automatic reveal skill
+        if current_time - self.reveal_timer > self.reveal_cooldown:
+            self.reveal_timer = current_time
+            self.landscape.reveal_nodes()
+
+        return True
+
+    def draw(self, surface):
+        self.landscape.draw(surface)
+        self.creature.draw(surface)
+
+        font = pygame.font.Font(None, 24)
+        score_text = font.render(f"Score: {self.score}", True, (255, 255, 255))
+        depth_text = font.render(f"Depth: {self.depth}", True, (255, 255, 255))
+        surface.blit(score_text, (10, 10))
+        surface.blit(depth_text, (10, 40))
+
+        # Draw RECALL button
+        recall_button = pygame.Rect(WIDTH - 120, HEIGHT - 60, 100, 50)
+        pygame.draw.rect(surface, (255, 0, 0), recall_button)
+        recall_font = pygame.font.Font(None, 24)
+        recall_text = recall_font.render("RECALL", True, (255, 255, 255))
+        text_rect = recall_text.get_rect(center=recall_button.center)
+        surface.blit(recall_text, text_rect)
+
+    def recall_creature(self):
+        self.running_in_background = False
+        print("Creature recalled from exploration.")
+
+    def run(self):
+        self.running_in_background = True
+        while self.running_in_background:
+            if not self.update():
+                self.running_in_background = False
+            time.sleep(0.1)  # Add a small delay to prevent excessive CPU usage
+        return self.score, self.depth
+
+    # def reveal_nodes(self):
+        # self.reveal_timer = time.time()
+
+    # def handle_input(self):
+        # for event in pygame.event.get():
+            # if event.type == pygame.QUIT:
+                # return False
+            # elif event.type == pygame.KEYDOWN:
+                # if event.key == pygame.K_ESCAPE:
+                    # return False
+        # return True
+
+def start_eat_creature_minigame():
+    global eat_game
+    if not eat_game:
+        creature_stats = {
+            'size': egg_creature.width // 2,
+            'health': 100,
+            'energy': 100,
+        }
+        eat_game = EatCreatureGame(creature_stats)
+        eat_game.running_in_background = True
+        threading.Thread(target=eat_game.run, daemon=True).start()
+    print("Creature started exploring!")
+
+def handle_minigame_results(self, score, depth):
+    global ore_chunks, tokens
+    ore_chunks += score
+    tokens += depth
+    print(f"Mini-game results: Score: {score}, Depth: {depth}")
+    print(f"New totals: ORE: {ore_chunks}, Tokens: {tokens}")
+
+
 
 def ensure_valid_color(color):
     """Ensure the color is a valid tuple of 3 integers between 0 and 255."""
@@ -592,11 +1080,12 @@ def handle_lab_interaction(x, y, right_click=False):
         if len(selected_lab_elements) >= 2:
             combination_result = combine_elements(selected_lab_elements)
             if isinstance(combination_result, dict):
-                tokens += 5  # Adjust as needed
+                tokens += 5  # Remove this line, as we're now adding tokens in combine_elements
                 ore_chunks += 10  # Adjust as needed
             else:
                 tokens += 1
                 ore_chunks += 2
+            print(f"After combination: Tokens: {tokens}, Ore: {ore_chunks}")  # Add this debug print
             selected_lab_elements = []
         else:
             combination_result = "Select at least 2 elements to combine."
@@ -704,7 +1193,7 @@ def wrap_text(text, font, max_width):
     return lines
     
 def combine_elements(selected_elements):
-    global compounds
+    global compounds, tokens
     
     selected_symbols = [e['symbol'] for e in selected_elements]
     element_counts = {symbol: selected_symbols.count(symbol) for symbol in set(selected_symbols)}
@@ -726,6 +1215,8 @@ def combine_elements(selected_elements):
         
         result = random.choices(possible_compounds, weights=weights, k=1)[0]
         result['tokens'] = len(selected_elements) * 2  # 2x tokens for every element used
+        tokens += result['tokens']  # Add this line to update the global token count
+        print(f"Gained {result['tokens']} tokens. New total: {tokens}")  # Add this debug print
         return result
     
     # If no matching compound is found, create an unknown compound
@@ -793,12 +1284,8 @@ def update_spinning_reels():
                 spin_slowdown = max(1, spin_slowdown - 0.05)
 
 def handle_button_click(label):
-    global playing_slot_machine, tokens, current_screen
-    if label == "PICK":
-        current_screen = "element_purchase"
-    elif label == "FEED":
-        current_screen = "feeding"
-    elif label == "LAB":
+    global playing_slot_machine, tokens, current_screen, eat_game
+    if label == "LAB":
         current_screen = "lab"
     elif label == "SLOTS":
         if tokens > 0:
@@ -806,6 +1293,17 @@ def handle_button_click(label):
             current_screen = "slot_machine"
         else:
             print("Not enough tokens to play slots!")
+    elif label == "PICK":
+        current_screen = "element_purchase"
+    elif label == "FEED":
+        current_screen = "feeding"
+    elif label == "EAT":
+        if creature_displayed and egg_level >= 10:
+            if eat_game and eat_game.running_in_background:
+                current_screen = "eat_creature"  # Switch to EatCreature view
+            else:
+                start_eat_creature_minigame()
+                current_screen = "eat_creature"
     elif label == "SPIN":
         if not spinning and tokens > 0:
             tokens -= 1
@@ -817,6 +1315,21 @@ def handle_button_click(label):
             element_selection_confirmed = True
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             save_game(f"autosave_{timestamp}")
+
+def start_eat_creature_minigame():
+    global eat_game
+    if not eat_game:
+        creature_stats = {
+            'size': 5,  # Start small in the mini-game
+            'health': 100,
+            'energy': 100,
+            'x': WIDTH // 2,  # Position in the middle of the screen
+            'y': HEIGHT // 2
+        }
+        eat_game = EatCreatureGame(creature_stats)
+        eat_game.running_in_background = True
+        threading.Thread(target=eat_game.run, daemon=True).start()
+    print("Creature started exploring!")
 
 def handle_element_selection(x, y):
     global selected_elements, elements_picked, element_quantities, element_purchase_quantities, enlarged_element, feeding_quantities
@@ -1104,14 +1617,13 @@ def draw_creature():
             tail_color = creature_traits["color"][2] if len(creature_traits["color"]) > 2 else (100, 100, 100)
             pygame.draw.rect(screen, tail_color, (x_center - body_size // 4, y_center + body_size, body_size // 2, body_size))
 
-
 def draw_main_game_screen():
     screen.fill((0, 0, 0))
     
     if creature_displayed:
-        draw_creature()
+        egg_creature.draw(screen)  # This will now use the HatchedCreature class
     else:
-        egg_creature.draw(screen)
+        egg_creature.draw(screen)  # Only draw the egg if the creature isn't hatched
     
     # Draw selected elements
     element_width = 80
@@ -1120,6 +1632,10 @@ def draw_main_game_screen():
     start_x = (width - total_elements_width) // 2
 
     for i, element in enumerate(selected_elements):
+        if element is None:
+            print(f"Warning: Element with symbol {game_data['selected_elements'][i]} could not be found.")
+            continue  # Skip this element if it's invalid
+
         x = start_x + i * element_spacing
         y = 50
         pygame.draw.rect(screen, element["color"], (x, y, element_width, element_width))
@@ -1134,8 +1650,10 @@ def draw_main_game_screen():
     # Draw buttons
     draw_buttons()
     
-    # Draw egg info
+    # Draw game info
     font = pygame.font.Font(None, 24)
+    emoji_font = pygame.font.Font(font_path, 24)
+
     texts = [
         f"Egg Level: {egg_level}",
         f"Growth: {growth_level}/{max_growth_per_level}",
@@ -1143,11 +1661,162 @@ def draw_main_game_screen():
         f"Tokens: {tokens}",
         f"Music: {'ON' if music_on else 'OFF'}",
         f"Theme: {'1' if current_theme == THEME_SONG_1 else '2'}",
+        f"Depth: {eat_game.depth if eat_game else '0'}"
     ]
     for i, text in enumerate(texts):
         surface = font.render(text, True, (255, 255, 255))
         screen.blit(surface, (10, 10 + i * 30))
-        
+
+    depth_text = f"Depth: {eat_game.depth if eat_game and eat_game.running_in_background else ''}"
+    depth_surface = font.render(depth_text, True, (255, 255, 255))
+    screen.blit(depth_surface, (10, 10 + len(texts) * 30))
+
+    if not eat_game or not eat_game.running_in_background:
+        no_entry_emoji = emoji_font.render('🚫', True, (255, 255, 255))
+        screen.blit(no_entry_emoji, (10 + depth_surface.get_width(), 10 + len(texts) * 30))
+    
+    pygame.display.flip()
+
+def save_game(game_name=None):
+    global current_game_name
+    
+    if game_name is None:
+        if current_game_name is None:
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            current_game_name = f"game_{timestamp}"
+        game_name = current_game_name
+    
+    game_data = {
+        "ore_chunks": ore_chunks,
+        "selected_elements": [e['symbol'] for e in selected_elements],
+        "element_quantities": element_quantities,
+        "egg_level": egg_level,
+        "growth_level": growth_level,
+        "tokens": tokens,
+        "lifetime_fed": lifetime_fed,
+        "music_on": music_on,
+        "current_theme": current_theme
+    }
+    
+    if eat_game:
+        game_data["eat_game_state"] = {
+            "depth": eat_game.depth,
+            "score": eat_game.score,
+            "creature_stats": {
+                "x": eat_game.creature.x,
+                "y": eat_game.creature.y,
+                "health": eat_game.creature.health,
+                "energy": eat_game.creature.energy,
+                "size": eat_game.creature.size,
+            }
+        }
+    
+    # Load existing saves
+    all_saves = load_all_saves()
+    
+    # Add or update the current save
+    all_saves[game_name] = game_data
+    
+    # Save all games to a single JSON file
+    with open("all_saves.json", "w") as f:
+        json.dump(all_saves, f)
+    
+    print(f"Game saved as {game_name}")
+    return game_name
+
+def load_game(game_name):
+    global ore_chunks, selected_elements, element_quantities, egg_level, growth_level, tokens, lifetime_fed, current_game_name, music_on, current_theme, eat_game, creature_displayed, egg_creature
+    
+    all_saves = load_all_saves()
+    
+    if game_name not in all_saves:
+        print(f"Save file {game_name} not found.")
+        return False
+    
+    game_data = all_saves[game_name]
+    
+    ore_chunks = game_data["ore_chunks"]
+    selected_elements = [next((e for e in elements if e['symbol'] == symbol), None) for symbol in game_data["selected_elements"]]
+    element_quantities = game_data["element_quantities"]
+    egg_level = game_data["egg_level"]
+    growth_level = game_data["growth_level"]
+    tokens = game_data.get("tokens", 0)
+    lifetime_fed = game_data.get("lifetime_fed", {element['symbol']: 0 for element in elements})
+    music_on = game_data.get("music_on", music_on)
+    current_theme = game_data.get("current_theme", current_theme)
+    current_game_name = game_name
+
+    # Check if the creature should be displayed
+    if egg_level >= 10 and growth_level >= required_growth_level_for_hatching:
+        creature_displayed = True
+        egg_creature = HatchedCreature(width, height)  # Make sure you have the hatched creature class properly defined
+    else:
+        creature_displayed = False
+        egg_creature = EggCreature(width, height)
+
+    if "eat_game_state" in game_data:
+        eat_game_state = game_data["eat_game_state"]
+        creature_stats = eat_game_state["creature_stats"]
+        eat_game = EatCreatureGame(creature_stats)
+        eat_game.depth = eat_game_state["depth"]
+        eat_game.score = eat_game_state["score"]
+        threading.Thread(target=eat_game.run, daemon=True).start()
+    
+    start_theme_song()
+    check_and_evolve_on_startup()
+    return True
+
+def handle_button_click(label):
+    global current_screen, eat_game
+    if label == "LAB":
+        current_screen = "lab"
+    elif label == "SLOTS":
+        if tokens > 0:
+            playing_slot_machine = True
+            current_screen = "slot_machine"
+        else:
+            print("Not enough tokens to play slots!")
+    elif label == "PICK":
+        current_screen = "element_purchase"
+    elif label == "FEED":
+        current_screen = "feeding"
+    elif label == "EAT":
+        if creature_displayed and egg_level >= 10:
+            if not eat_game:
+                start_eat_creature_minigame()
+            current_screen = "eat_creature"
+    elif label == "SPIN":
+        if not spinning and tokens > 0:
+            tokens -= 1
+            spin_reels()
+    elif label == "BACK":
+        current_screen = "main_game"
+    elif label == "CONFIRM":
+        if elements_picked >= max_elements:
+            element_selection_confirmed = True
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            save_game(f"autosave_{timestamp}")
+
+def draw_eat_creature_screen():
+    screen.fill((0, 0, 0))
+    if eat_game:
+        eat_game.draw(screen)
+        font = pygame.font.Font(None, 36)
+        depth_text = font.render(f"Depth: {eat_game.depth}", True, (255, 255, 255))
+        score_text = font.render(f"Score: {eat_game.score}", True, (255, 255, 255))
+        screen.blit(depth_text, (10, 10))
+        screen.blit(score_text, (10, 50))
+    else:
+        font = pygame.font.Font(None, 36)
+        text = font.render("Creature is not currently exploring", True, (255, 255, 255))
+        screen.blit(text, (width // 2 - text.get_width() // 2, height // 2))
+    
+    back_button = pygame.Rect(width - 110, 10, 100, 50)
+    pygame.draw.rect(screen, (255, 0, 0), back_button)
+    back_text = font.render("Back", True, (255, 255, 255))
+    back_text_rect = back_text.get_rect(center=back_button.center)
+    screen.blit(back_text, back_text_rect)
+
 def draw_egg_info():
     font = pygame.font.Font(None, 24)
     texts = [
@@ -1169,17 +1838,16 @@ def check_egg_evolution():
         hatch_creature()
 
 def hatch_creature():
-    global selected_elements, lifetime_fed, creature_displayed, creature_traits
+    global selected_elements, lifetime_fed, creature_displayed, creature_traits, egg_creature
 
     if creature_displayed:
         return  # Prevent repeated hatching
 
     print("Hatching creature!")
     
-    # Calculate creature traits
     creature_traits = {
         "color": [],
-        "size": 0,
+        "size": 5,  # Start with a small size
         "body_parts": []
     }
     
@@ -1194,17 +1862,16 @@ def hatch_creature():
         else:
             creature_traits["color"].append((0, 0, 255))
         
-        creature_traits["size"] += quantity
-        
         if quantity > 10:
             creature_traits["body_parts"].append("wings")
         if quantity > 5:
             creature_traits["body_parts"].append("tail")
 
-    # Mark the creature as displayed
     creature_displayed = True
-    print(f"Creature hatched with traits: {creature_traits}")
+    egg_creature = HatchedCreature(traits=creature_traits, width=width, height=height)  # Use the new HatchedCreature class
     
+    print(f"Creature hatched with traits: {creature_traits}")
+
 def evaluate_spin():
     global ore_chunks
     payout = 0
@@ -1238,14 +1905,27 @@ def autosave_game():
         last_autosave_time = current_time
 
 def save_game(game_name=None):
-    global current_game_name
+    global current_game_name, eat_game
     
     if game_name is None:
         if current_game_name is None:
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             current_game_name = f"game_{timestamp}"
         game_name = current_game_name
-    
+
+    if eat_game:
+        game_data["eat_game_state"] = {
+            "depth": eat_game.depth,
+            "score": eat_game.score,
+            "creature_stats": {
+                "x": eat_game.creature.x,
+                "y": eat_game.creature.y,
+                "size": eat_game.creature.size,
+                "health": eat_game.creature.health,
+                "energy": eat_game.creature.energy,
+            }
+        }
+        
     game_data = {
         "ore_chunks": ore_chunks,
         "selected_elements": [e['symbol'] for e in selected_elements],
@@ -1272,7 +1952,7 @@ def save_game(game_name=None):
     return game_name
 
 def load_game(game_name):
-    global ore_chunks, selected_elements, element_quantities, egg_level, growth_level, tokens, lifetime_fed, current_game_name, music_on, current_theme
+    global ore_chunks, selected_elements, element_quantities, egg_level, growth_level, tokens, lifetime_fed, current_game_name, music_on, current_theme, eat_game
     
     all_saves = load_all_saves()
     
@@ -1283,7 +1963,7 @@ def load_game(game_name):
     game_data = all_saves[game_name]
     
     ore_chunks = game_data["ore_chunks"]
-    selected_elements = [next(e for e in elements if e['symbol'] == symbol) for symbol in game_data["selected_elements"]]
+    selected_elements = [next((e for e in elements if e['symbol'] == symbol), None) for symbol in game_data["selected_elements"]]
     element_quantities = game_data["element_quantities"]
     egg_level = game_data["egg_level"]
     growth_level = game_data["growth_level"]
@@ -1291,21 +1971,28 @@ def load_game(game_name):
     lifetime_fed = game_data.get("lifetime_fed", {element['symbol']: 0 for element in elements})
     music_on = game_data.get("music_on", music_on)
     current_theme = game_data.get("current_theme", current_theme)
-    start_theme_song()
     current_game_name = game_name
     
+    if "eat_game_state" in game_data:
+        eat_game_state = game_data["eat_game_state"]
+        creature_stats = eat_game_state["creature_stats"]
+        eat_game = EatCreatureGame(creature_stats)
+        eat_game.depth = eat_game_state["depth"]
+        eat_game.score = eat_game_state["score"]
+        threading.Thread(target=eat_game.run, daemon=True).start()
+    
     # Update music state based on loaded preferences
+    start_theme_song()
+    
+    check_and_evolve_on_startup()
+    return True
+
+def apply_music_state():
+    global music_on
     if music_on:
         pygame.mixer.music.unpause()
     else:
         pygame.mixer.music.pause()
-    
-    # Load the correct theme song
-    pygame.mixer.music.load(current_theme)
-    pygame.mixer.music.play(-1)
-    
-    check_and_evolve_on_startup()
-    return True
 
 def load_all_saves():
     if not os.path.exists("all_saves.json"):
@@ -1404,17 +2091,30 @@ def handle_confirmation_dialog(x, y, message, yes_action):
     
     return False
 
+# Initialize variables
+eat_game = None
+background_exploration_timer = 0
+BACKGROUND_EXPLORATION_INTERVAL = 5000  # Check every 5 seconds
+
+# Define the required growth level for hatching
+required_growth_level_for_hatching = 5  # Example value, adjust as needed
+
 # Main game loop
 running = True
 current_screen = "title"
-game_states = ["title", "element_selection", "main_game", "slot_machine", "element_purchase", "feeding", "saved_games", "lab"]
+game_states = ["title", "element_selection", "main_game", "slot_machine", "element_purchase", "feeding", "saved_games", "lab", "eat_creature"]
 creature_displayed = False
 
 # Function to check and evolve egg on startup
 def check_and_evolve_on_startup():
-    global egg_level, creature_displayed
-    if egg_level >= 10 and not creature_displayed:
-        hatch_creature()
+    global creature_displayed, egg_creature
+
+    # Determine if the egg should hatch based on egg level and growth level
+    if egg_level >= 10 and growth_level >= required_growth_level_for_hatching:
+        hatch_creature()  # Call the hatch_creature function to perform the hatching process
+    else:
+        creature_displayed = False
+        egg_creature = EggCreature(width, height)  # Continue displaying the egg if not hatched
 
 # Run this check at the start of the game
 check_and_evolve_on_startup()
@@ -1423,22 +2123,39 @@ check_and_evolve_on_startup()
 music_on, current_theme = load_music_preference()
 start_theme_song()
 
+running = True
 clock = pygame.time.Clock()
 fps = 30  # Set to 30 FPS
 
+# Main game loop
 while running:
     dt = clock.tick(fps) / 1000.0  # Get time since last frame in seconds
     current_fps = clock.get_fps()
+
+    # Only apply rotation if the creature is still an egg
+    if isinstance(egg_creature, EggCreature):
+        egg_creature.rotation += egg_creature.rotation_speed * dt * 60  # Multiply by 60 to maintain similar speed at lower FPS
+        egg_creature.update()  # Only update the egg creature
+
+    # Global music and theme toggling
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_m]:
+        toggle_music()
+    if keys[pygame.K_t]:
+        switch_theme()
 
     button_down = False
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_m:
-                toggle_music()
-            elif event.key == pygame.K_t:
-                switch_theme()
+            if event.key == pygame.K_ESCAPE:
+                if current_screen == "title":
+                    running = False
+                elif current_screen == "eat_creature":
+                    current_screen = "main_game"
+                else:
+                    current_screen = "title"
             elif event.key == pygame.K_F3:  # Toggle debug mode with F3 key
                 debug_mode = not debug_mode
         elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -1466,6 +2183,7 @@ while running:
                         if game_rect.collidepoint(x, y):
                             if load_game(game):
                                 current_screen = "main_game"
+                                apply_music_state()  # Apply music state after loading game
                         elif delete_rect.collidepoint(x, y):
                             confirming_delete = True
                             game_to_delete = game
@@ -1493,6 +2211,10 @@ while running:
             elif current_screen == "feeding":
                 handle_feeding_selection(x, y, button_down)
                 check_egg_evolution()  # Ensure this is called after feeding
+            elif current_screen == "eat_creature":
+                back_button = pygame.Rect(width - 110, 10, 100, 50)
+                if back_button.collidepoint(x, y):
+                    current_screen = "main_game"
         elif event.type == pygame.MOUSEBUTTONUP:
             button_down = False
         elif event.type == pygame.MOUSEWHEEL:
@@ -1510,9 +2232,11 @@ while running:
                 
     screen.fill((0, 0, 0))  # Clear screen with black background
 
-    # Update egg creature based on time passed
-    egg_creature.rotation += egg_creature.rotation_speed * dt * 60  # Multiply by 60 to maintain similar speed at lower FPS
-    egg_creature.update()
+    # Check on background exploration
+    if eat_game and eat_game.running_in_background:
+        ore_chunks += eat_game.score
+        tokens += eat_game.depth
+        eat_game.score = 0  # Reset score after collecting
 
     if current_screen == "title":
         draw_title_screen()
@@ -1533,7 +2257,27 @@ while running:
     elif current_screen == "lab":
         draw_lab_screen()
     elif current_screen == "main_game":
+        apply_music_state()  # Ensure music state is applied when entering main game screen
         draw_main_game_screen()
+    elif current_screen == "eat_creature":
+        if eat_game:
+            eat_game.draw(screen)
+            back_button = pygame.Rect(width - 110, 10, 100, 50)
+            pygame.draw.rect(screen, (255, 0, 0), back_button)
+            font = pygame.font.Font(None, 36)
+            back_text = font.render("Back", True, (255, 255, 255))
+            back_text_rect = back_text.get_rect(center=back_button.center)
+            screen.blit(back_text, back_text_rect)
+
+            # Handle RECALL button click
+            recall_button = pygame.Rect(WIDTH - 120, HEIGHT - 60, 100, 50)
+            if event.type == pygame.MOUSEBUTTONDOWN and recall_button.collidepoint(event.pos):
+                eat_game.recall_creature()
+                current_screen = "main_game"
+        else:
+            font = pygame.font.Font(None, 36)
+            text = font.render("Creature is not currently exploring", True, (255, 255, 255))
+            screen.blit(text, (width // 2 - text.get_width() // 2, height // 2))
 
     draw_debug_overlay(current_fps)  # Draw debug information
     

@@ -9,5 +9,4 @@
 myenv/
 
 # Do not ignore these directories
-!ASSETS/
 !SOUNDS/
