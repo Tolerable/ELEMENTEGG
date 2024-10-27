@@ -1,0 +1,429 @@
+[
+  {
+    "name": "Water",
+    "formula": "H2O",
+    "elements": ["H", "O"],
+    "description": "A vital compound for all known forms of life, water covers 71% of Earth's surface and is essential for various biological processes.",
+    "trivia": "Water exists in three states: solid (ice), liquid, and gas (vapor)."
+  },
+  {
+    "name": "Table Salt",
+    "formula": "NaCl",
+    "elements": ["Na", "Cl"],
+    "description": "A common ionic compound used primarily as a seasoning and preservative in food. It plays a crucial role in maintaining human health.",
+    "trivia": "Salt was once so valuable that it was used as currency in ancient times."
+  },
+  {
+    "name": "Carbon Monoxide",
+    "formula": "CO",
+    "elements": ["C", "O"],
+    "description": "A colorless, odorless gas that is highly toxic to humans and animals when inhaled. It is produced by incomplete combustion of carbon-containing materials.",
+    "trivia": "Carbon monoxide poisoning is often called the 'silent killer' because it is undetectable by human senses."
+  },
+  {
+    "name": "Hydrochloric Acid",
+    "formula": "HCl",
+    "elements": ["H", "Cl"],
+    "description": "A strong, corrosive acid commonly used in industrial processes and laboratory experiments. It is also a component of gastric acid in the stomach.",
+    "trivia": "Hydrochloric acid was historically known as 'muriatic acid'."
+  },
+  {
+    "name": "Methane",
+    "formula": "CH4",
+    "elements": ["C", "H"],
+    "description": "A simple hydrocarbon and a major component of natural gas. Methane is a potent greenhouse gas with significant implications for climate change.",
+    "trivia": "Methane is produced by anaerobic decomposition of organic matter in wetlands, landfills, and the digestive systems of ruminants."
+  },
+  {
+    "name": "Oxygen Gas",
+    "formula": "O2",
+    "elements": ["O"],
+    "description": "A diatomic molecule essential for aerobic respiration in most living organisms and for combustion processes.",
+    "trivia": "Oxygen makes up about 21% of Earth's atmosphere by volume."
+  },
+  {
+    "name": "Nitric Oxide",
+    "formula": "NO",
+    "elements": ["N", "O"],
+    "description": "A signaling molecule in the body involved in various physiological and pathological processes, including vasodilation and neurotransmission.",
+    "trivia": "Nitric oxide was named 'Molecule of the Year' in 1992 for its importance in biology."
+  },
+  {
+    "name": "Ammonia",
+    "formula": "NH3",
+    "elements": ["N", "H"],
+    "description": "A colorless gas with a pungent smell, used extensively in the production of fertilizers and as a building block for the synthesis of many pharmaceuticals.",
+    "trivia": "Ammonia is produced naturally in the environment through the decomposition of organic matter."
+  },
+  {
+    "name": "Carbon Dioxide",
+    "formula": "CO2",
+    "elements": ["C", "O"],
+    "description": "A colorless gas produced by the respiration of animals and the combustion of organic matter. It is a key greenhouse gas and is utilized by plants during photosynthesis.",
+    "trivia": "Carbon dioxide is used in carbonated beverages to give them their fizz."
+  },
+  {
+    "name": "Calcium Carbonate",
+    "formula": "CaCO3",
+    "elements": ["Ca", "C", "O"],
+    "description": "A white solid found in rocks as the minerals calcite and aragonite. It is used in the production of lime and cement and as a dietary calcium supplement.",
+    "trivia": "Calcium carbonate is the main component of seashells and the shells of marine organisms."
+  },
+  {
+    "name": "Potassium Oxide",
+    "formula": "K2O",
+    "elements": ["K", "O"],
+    "description": "An ionic compound used in fertilizers to provide potassium, an essential nutrient for plant growth.",
+    "trivia": "Potassium oxide reacts vigorously with water to form potassium hydroxide."
+  },
+  {
+    "name": "Hydrogen Peroxide",
+    "formula": "H2O2",
+    "elements": ["H", "O"],
+    "description": "A pale blue liquid used as a disinfectant, bleach, and antiseptic. It decomposes into water and oxygen, making it environmentally friendly.",
+    "trivia": "Hydrogen peroxide is naturally produced in organisms as a byproduct of metabolism."
+  },
+  {
+    "name": "Sulfur Dioxide",
+    "formula": "SO2",
+    "elements": ["S", "O"],
+    "description": "A toxic gas with a pungent, irritating smell. It is released by volcanic eruptions and industrial processes, and it contributes to acid rain.",
+    "trivia": "Sulfur dioxide is used as a preservative in dried fruits and wines."
+  },
+  {
+    "name": "Sodium Bicarbonate",
+    "formula": "NaHCO3",
+    "elements": ["Na", "H", "C", "O"],
+    "description": "A white solid commonly known as baking soda. It is used in baking, as an antacid, and in various cleaning products.",
+    "trivia": "Sodium bicarbonate neutralizes acids and bases, making it useful for treating acid indigestion."
+  },
+  {
+    "name": "Magnesium Oxide",
+    "formula": "MgO",
+    "elements": ["Mg", "O"],
+    "description": "A white, hygroscopic solid used as a refractory material, a laxative, and an antacid. It is also used in the production of magnesium metal.",
+    "trivia": "Magnesium oxide is produced by burning magnesium in the air."
+  },
+  {
+    "name": "Iron Oxide",
+    "formula": "FeO",
+    "elements": ["Fe", "O"],
+    "description": "A black powder used as a pigment and in the production of iron and steel. It is one of several iron oxides.",
+    "trivia": "Iron oxide is responsible for the red color of rust and the red pigments in some rocks."
+  },
+  {
+    "name": "Iron (III) Oxide",
+    "formula": "Fe2O3",
+    "elements": ["Fe", "O"],
+    "description": "A reddish-brown solid commonly known as rust. It is used as a pigment and in the production of iron and steel.",
+    "trivia": "Iron (III) oxide is used in magnetic recording media, such as tapes and hard drives."
+  },
+  {
+    "name": "Hydrogen Sulfide",
+    "formula": "H2S",
+    "elements": ["H", "S"],
+    "description": "A colorless gas with a characteristic foul odor of rotten eggs. It is toxic and flammable, and it occurs naturally in volcanic gases and crude petroleum.",
+    "trivia": "Hydrogen sulfide is used in the production of sulfuric acid and as a reagent in chemical analysis."
+  },
+  {
+    "name": "Calcium Sulfate",
+    "formula": "CaSO4",
+    "elements": ["Ca", "S", "O"],
+    "description": "A white solid used in the production of plaster, cement, and drywall. It also serves as a soil conditioner in agriculture.",
+    "trivia": "Calcium sulfate is the main component of gypsum, a mineral used in sculpture and construction."
+  },
+  {
+    "name": "Ammonium Chloride",
+    "formula": "NH4Cl",
+    "elements": ["N", "H", "Cl"],
+    "description": "A white crystalline salt used in fertilizers, explosives, and as a flavoring agent in some types of licorice.",
+    "trivia": "Ammonium chloride is produced as a byproduct of the Solvay process for manufacturing sodium carbonate."
+  },
+  {
+    "name": "Aluminium Chloride",
+    "formula": "AlCl3",
+    "elements": ["Al", "Cl"],
+    "description": "A white or yellow solid used in the chemical industry as a catalyst for various reactions, including the production of synthetic rubber and the refining of petroleum.",
+    "trivia": "Aluminium chloride is often used in antiperspirants to reduce sweating."
+  },
+  {
+    "name": "Zinc Oxide",
+    "formula": "ZnO",
+    "elements": ["Zn", "O"],
+    "description": "A white powder used in sunscreens, cosmetics, and as a dietary supplement. It has antimicrobial and UV-blocking properties.",
+    "trivia": "Zinc oxide is used in rubber manufacturing to improve durability and resistance."
+  },
+  {
+    "name": "Carbon Disulfide",
+    "formula": "CS2",
+    "elements": ["C", "S"],
+    "description": "A colorless, volatile liquid with a sweet odor. It is used in the production of rayon and cellophane, and as a solvent for fats and resins.",
+    "trivia": "Carbon disulfide is highly flammable and toxic, and exposure can lead to neurological damage."
+  },
+  {
+    "name": "Phosphine",
+    "formula": "PH3",
+    "elements": ["P", "H"],
+    "description": "A colorless, flammable gas with a fishy odor. It is used as a fumigant and in the production of semiconductors.",
+    "trivia": "Phosphine is highly toxic and can spontaneously ignite in air."
+  },
+  {
+    "name": "Phosphate",
+    "formula": "PO4",
+    "elements": ["P", "O"],
+    "description": "A polyatomic ion that plays a critical role in biological molecules such as DNA, RNA, and ATP. It is also used in fertilizers.",
+    "trivia": "Phosphates are essential for energy transfer in cells and for the structure of bones and teeth."
+  },
+  {
+    "name": "Nitric Acid",
+    "formula": "HNO3",
+    "elements": ["H", "N", "O"],
+    "description": "A highly corrosive mineral acid used in the production of fertilizers, explosives, and in metal processing.",
+    "trivia": "Nitric acid was historically known as 'aqua fortis' or 'strong water'."
+  },
+  {
+    "name": "Sulfuric Acid",
+    "formula": "H2SO4",
+    "elements": ["H", "S", "O"],
+    "description": "A strong mineral acid used in a wide range of industrial processes, including the manufacture of fertilizers, chemicals, and in petroleum refining.",
+    "trivia": "Sulfuric acid is one of the most produced chemicals worldwide."
+  },
+  {
+    "name": "LSD",
+    "formula": "C20H25N3O",
+    "elements": ["C", "H", "N", "O"],
+    "description": "A powerful hallucinogenic drug that alters perception, mood, and cognitive processes. It is derived from ergot, a fungus that grows on rye.",
+    "trivia": "LSD, or lysergic acid diethylamide, was first synthesized by Albert Hofmann in 1938."
+  },
+  {
+    "name": "Methamphetamine",
+    "formula": "C10H15N",
+    "elements": ["C", "H", "N"],
+    "description": "A potent central nervous system stimulant used medically to treat ADHD and obesity, and illicitly as a recreational drug.",
+    "trivia": "Methamphetamine is known for its powerful and addictive properties, often leading to severe physical and mental health issues."
+  },
+  {
+    "name": "Heroin",
+    "formula": "C21H23NO5",
+    "elements": ["C", "H", "N", "O"],
+    "description": "An opioid drug made from morphine, used illegally for its euphoric effects. It is highly addictive and can cause severe physical and psychological dependence.",
+    "trivia": "Heroin was originally marketed as a cough suppressant and pain reliever in the late 19th century."
+  },
+  {
+    "name": "Aspirin",
+    "formula": "C9H8O4",
+    "elements": ["C", "H", "O"],
+    "description": "A widely used medication to reduce pain, fever, and inflammation. It also has antiplatelet properties, helping to prevent blood clots.",
+    "trivia": "Aspirin, or acetylsalicylic acid, was first synthesized by Felix Hoffmann at Bayer in 1897."
+  },
+  {
+    "name": "Codeine",
+    "formula": "C18H21NO3",
+    "elements": ["C", "H", "N", "O"],
+    "description": "An opioid used to treat mild to moderate pain and to relieve coughing. It is often combined with other medications for enhanced pain relief.",
+    "trivia": "Codeine is naturally found in the opium poppy, Papaver somniferum."
+  },
+  {
+    "name": "Penicillin",
+    "formula": "C16H18N2O4S",
+    "elements": ["C", "H", "N", "O", "S"],
+    "description": "An antibiotic derived from the Penicillium mold. It is used to treat a wide variety of bacterial infections.",
+    "trivia": "Penicillin was discovered by Alexander Fleming in 1928 and revolutionized the treatment of bacterial infections."
+  },
+  {
+    "name": "Cocaine",
+    "formula": "C17H21NO4",
+    "elements": ["C", "H", "N", "O"],
+    "description": "A powerful stimulant drug obtained from the coca plant. It is used medically as a local anesthetic and illicitly for its euphoric effects.",
+    "trivia": "Cocaine was once an ingredient in Coca-Cola and was used in various tonics and elixirs in the 19th century."
+  },
+  {
+    "name": "Morphine",
+    "formula": "C17H19NO3",
+    "elements": ["C", "H", "N", "O"],
+    "description": "A potent opioid analgesic used to treat severe pain. It is derived from the opium poppy and is known for its high potential for addiction.",
+    "trivia": "Morphine was first isolated in 1804 by the German pharmacist Friedrich Sertürner."
+  },
+  {
+    "name": "Methadone",
+    "formula": "C21H27NO",
+    "elements": ["C", "H", "N", "O"],
+    "description": "A synthetic opioid used to treat pain and as part of drug addiction detoxification and maintenance programs.",
+    "trivia": "Methadone was developed in Germany during World War II as an alternative to morphine."
+  },
+  {
+    "name": "Paracetamol",
+    "formula": "C8H9NO2",
+    "elements": ["C", "H", "N", "O"],
+    "description": "A common pain reliever and fever reducer. It is widely used to treat headaches, muscle aches, and other minor pains.",
+    "trivia": "Paracetamol is known as acetaminophen in the United States and Canada."
+  },
+  {
+    "name": "Ibuprofen",
+    "formula": "C13H18O2",
+    "elements": ["C", "H", "O"],
+    "description": "A nonsteroidal anti-inflammatory drug (NSAID) used to reduce fever, pain, and inflammation. It is commonly used for headaches, dental pain, and arthritis.",
+    "trivia": "Ibuprofen was discovered in 1961 by Stewart Adams and his colleagues at Boots UK."
+  },
+  {
+    "name": "Glucose",
+    "formula": "C6H12O6",
+    "elements": ["C", "H", "O"],
+    "description": "A simple sugar that is an important energy source in living organisms. It is a key component of the carbohydrate metabolism.",
+    "trivia": "Glucose is produced by plants during photosynthesis and is found in many fruits and other parts of plants."
+  },
+  {
+    "name": "Sucrose",
+    "formula": "C12H22O11",
+    "elements": ["C", "H", "O"],
+    "description": "A common sugar composed of glucose and fructose. It is widely used as a sweetener in foods and beverages.",
+    "trivia": "Sucrose is extracted from sugar cane and sugar beets for commercial use."
+  },
+  {
+    "name": "Acetaminophen",
+    "formula": "C8H9NO2",
+    "elements": ["C", "H", "N", "O"],
+    "description": "A widely used over-the-counter pain reliever and fever reducer. It is often used to treat headaches, muscle aches, and fevers.",
+    "trivia": "Acetaminophen is one of the most commonly used medications in the world."
+  },
+  {
+    "name": "Atropine",
+    "formula": "C17H23NO3",
+    "elements": ["C", "H", "N", "O"],
+    "description": "A medication used to treat certain types of nerve agent and pesticide poisonings, as well as some types of slow heart rate. It is also used to decrease saliva production during surgery.",
+    "trivia": "Atropine is found naturally in the plant Atropa belladonna, also known as deadly nightshade."
+  },
+  {
+    "name": "Caffeine",
+    "formula": "C8H10N4O2",
+    "elements": ["C", "H", "N", "O"],
+    "description": "A central nervous system stimulant commonly found in coffee, tea, and soft drinks. It is used to reduce physical fatigue and prevent drowsiness.",
+    "trivia": "Caffeine is the most widely consumed psychoactive substance in the world."
+  },
+  {
+    "name": "Ethanol",
+    "formula": "C2H6O",
+    "elements": ["C", "H", "O"],
+    "description": "A volatile, flammable liquid commonly used as a recreational drug (alcohol) and in medical applications as an antiseptic and disinfectant.",
+    "trivia": "Ethanol is produced by the fermentation of sugars by yeast and is the type of alcohol found in alcoholic beverages."
+  },
+  {
+    "name": "Glycerol",
+    "formula": "C3H8O3",
+    "elements": ["C", "H", "O"],
+    "description": "A simple polyol compound used in pharmaceutical formulations, as a sweetener in the food industry, and as an ingredient in cosmetic products.",
+    "trivia": "Glycerol is a byproduct of biodiesel production."
+  },
+  {
+    "name": "Cystine",
+    "formula": "C6H12N2O4S2",
+    "elements": ["C", "H", "N", "O", "S"],
+    "description": "An amino acid that plays a role in the formation of disulfide bonds in proteins, contributing to their structure and stability.",
+    "trivia": "Cystine is formed from the oxidation of two cysteine molecules."
+  },
+  {
+    "name": "Serotonin",
+    "formula": "C10H12N2O",
+    "elements": ["C", "H", "N", "O"],
+    "description": "A neurotransmitter that contributes to feelings of well-being and happiness. It is involved in regulating mood, sleep, and appetite.",
+    "trivia": "Serotonin is often referred to as the 'feel-good' neurotransmitter."
+  },
+  {
+    "name": "Nicotine",
+    "formula": "C10H14N2",
+    "elements": ["C", "H", "N"],
+    "description": "A potent parasympathomimetic stimulant found in tobacco. It is responsible for the addictive properties of tobacco products.",
+    "trivia": "Nicotine was named after Jean Nicot, the French ambassador who introduced tobacco to France in the 16th century."
+  },
+  {
+    "name": "Chlorophyll",
+    "formula": "C55H72O5N4Mg",
+    "elements": ["C", "H", "O", "N", "Mg"],
+    "description": "A green pigment found in plants, algae, and cyanobacteria. It is essential for photosynthesis, allowing plants to absorb energy from light.",
+    "trivia": "Chlorophyll gives plants their green color and plays a crucial role in converting sunlight into chemical energy."
+  },
+  {
+    "name": "DNA",
+    "formula": "C15H31N3O13P2",
+    "elements": ["C", "H", "N", "O", "P"],
+    "description": "Deoxyribonucleic acid, the molecule that carries the genetic instructions used in the growth, development, functioning, and reproduction of all known living organisms.",
+    "trivia": "DNA was first identified by Swiss chemist Friedrich Miescher in 1869."
+  },
+  {
+    "name": "RNA",
+    "formula": "C10H14N5O7P",
+    "elements": ["C", "H", "N", "O", "P"],
+    "description": "Ribonucleic acid, a molecule essential in various biological roles in coding, decoding, regulation, and expression of genes.",
+    "trivia": "RNA molecules are involved in protein synthesis and sometimes in the transmission of genetic information."
+  },
+  {
+    "name": "Insulin",
+    "formula": "C257H383N65O77S6",
+    "elements": ["C", "H", "N", "O", "S"],
+    "description": "A hormone produced by the pancreas that regulates blood sugar levels by facilitating the uptake of glucose into tissues.",
+    "trivia": "Insulin was first used to treat diabetes in 1922, dramatically improving the prognosis for patients with the disease."
+  },
+  {
+    "name": "Vitamin C",
+    "formula": "C6H8O6",
+    "elements": ["C", "H", "O"],
+    "description": "An essential nutrient involved in the repair of tissue and the enzymatic production of certain neurotransmitters. It is also an antioxidant.",
+    "trivia": "Vitamin C deficiency leads to scurvy, a disease historically common among sailors and pirates."
+  },
+  {
+    "name": "Melatonin",
+    "formula": "C13H16N2O2",
+    "elements": ["C", "H", "N", "O"],
+    "description": "A hormone that regulates sleep-wake cycles. It is produced by the pineal gland in the brain.",
+    "trivia": "Melatonin supplements are commonly used to treat sleep disorders and jet lag."
+  },
+  {
+    "name": "Quinine",
+    "formula": "C20H24N2O2",
+    "elements": ["C", "H", "N", "O"],
+    "description": "A medication used to treat malaria and babesiosis. It is also an ingredient in tonic water, giving it a bitter taste.",
+    "trivia": "Quinine was the first effective treatment for malaria and was extracted from the bark of the cinchona tree."
+  },
+  {
+    "name": "Sulfanilamide",
+    "formula": "C6H8N2O2S",
+    "elements": ["C", "H", "N", "O", "S"],
+    "description": "A synthetic antimicrobial agent that was the basis of the first sulfonamide antibiotics. It is used to treat bacterial infections.",
+    "trivia": "Sulfanilamide paved the way for the development of a wide range of sulfa drugs, which were among the first effective antibiotics."
+  },
+  {
+    "name": "Valium",
+    "formula": "C16H13ClN2O",
+    "elements": ["C", "H", "N", "O", "Cl"],
+    "description": "A benzodiazepine medication used to treat anxiety, alcohol withdrawal, and seizures. It has a calming effect on the central nervous system.",
+    "trivia": "Valium was one of the first benzodiazepines to be synthesized and was approved for use in 1963."
+  },
+  {
+    "name": "Xanax",
+    "formula": "C17H13ClN4",
+    "elements": ["C", "H", "N", "Cl"],
+    "description": "A potent, short-acting benzodiazepine used to treat anxiety and panic disorders. It works by enhancing the effects of GABA in the brain.",
+    "trivia": "Xanax is one of the most prescribed psychiatric medications in the United States."
+  },
+  {
+    "name": "Prozac",
+    "formula": "C17H18F3NO",
+    "elements": ["C", "H", "N", "O", "F"],
+    "description": "An antidepressant of the selective serotonin reuptake inhibitor (SSRI) class. It's used to treat depression, OCD, and certain eating disorders.",
+    "trivia": "Prozac was the first SSRI to be approved for use in the United States in 1987."
+  },
+  {
+    "name": "Thorazine",
+    "formula": "C17H19ClN2S",
+    "elements": ["C", "H", "N", "Cl", "S"],
+    "description": "An antipsychotic medication used to treat schizophrenia and manic-depression. It is also used to control nausea and vomiting.",
+    "trivia": "Thorazine was the first antipsychotic drug discovered and has been used since the 1950s."
+  },
+  {
+    "name": "Adderall",
+    "formula": "C9H13N",
+    "elements": ["C", "H", "N"],
+    "description": "A central nervous system stimulant used to treat ADHD and narcolepsy. It is composed of amphetamine salts.",
+    "trivia": "Adderall helps increase attention and decrease impulsiveness and hyperactivity in patients with ADHD."
+  }
+]
